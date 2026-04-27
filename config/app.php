@@ -15,6 +15,9 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'providers' => \Illuminate\Support\ServiceProvider::defaultProviders()->merge([
+        App\Providers\AppServiceProvider::class,
+    ])->toArray(),
     /*
     |--------------------------------------------------------------------------
     | Application Environment
