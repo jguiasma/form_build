@@ -203,6 +203,11 @@
                 <i class="bi bi-tag-fill"></i> Form Categories
             </a>
 
+            <a href="{{ route('dashboard.form-types.index') }}"
+               class="nav-link {{ request()->routeIs('dashboard.form-types.*') ? 'active' : '' }}">
+                <i class="bi bi-journal-text"></i> Form Types
+            </a>
+
             <a href="{{ route('dashboard.form-fields.index') }}"
                class="nav-link {{ request()->routeIs('dashboard.form-fields.*') ? 'active' : '' }}">
                 <i class="bi bi-ui-checks"></i> Form Fields

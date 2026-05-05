@@ -13,10 +13,10 @@ class HomeController extends Controller
     public function index()
     {
         $stats = [
-            'accounts' => Account::count(),
-            'forms' => Form::count(),
-            'packs' => Pack::count(),
-            'subscriptions' => Subscription::count(),
+            'accounts' => Account::count('*'),
+            'forms' => Form::count('*'),
+            'packs' => Pack::count('*'),
+            'subscriptions' => Subscription::count('*'),
         ];
 
         return view('dashboard.home', compact('stats'));

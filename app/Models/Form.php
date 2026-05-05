@@ -13,6 +13,7 @@ class Form extends Model
 
     protected $fillable = [
         'form_category_id',
+        'form_type_id',
         'created_by',
         'title',
         'description',
@@ -59,5 +60,9 @@ class Form extends Model
     public function versions(): HasMany
     {
         return $this->hasMany(FormVersion::class);
+    }
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(FormType::class, 'form_type_id');
     }
 }

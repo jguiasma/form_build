@@ -6,13 +6,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-   public function up(): void
+    public function up(): void
     {
         Schema::create('form_types', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('form_category_id')
+                ->constrained('form_categories')
+                ->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
@@ -20,9 +20,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('form_types');
