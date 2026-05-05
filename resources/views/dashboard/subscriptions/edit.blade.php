@@ -42,7 +42,7 @@
                             <option value="">Select pack...</option>
                             @foreach($packs as $pack)
                                 <option value="{{ $pack->id }}" {{ old('pack_id', $subscription->pack_id) == $pack->id ? 'selected' : '' }}>
-                                    {{ $pack->title }} — ${{ $pack->amount }} / {{ $pack->duration_days }} days
+                                    {{ $pack->title }} — {{ $pack->amount }} TND / {{ $pack->duration_days }} days
                                 </option>
                             @endforeach
                         </select>

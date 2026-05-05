@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Exports\PacksExport;
 use App\Http\Controllers\Controller;
 use App\Models\Pack;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
 class PackController extends Controller
@@ -35,6 +37,18 @@ class PackController extends Controller
             ')
             ->rawColumns(['actions'])
             ->make(true);
+    }
+
+    public function export(string $format)
+    {
+        $filename = 'packs_' . now()->format('Y_m_d_His');
+
+        return match($format) {
+            'xlsx' => Excel::download(new PacksExport, $filename . '.xlsx'),
+            'csv'  => Excel::download(new PacksExport, $filename . '.csv', \Maatwebsite\Excel\Excel::CSV),
+            'pdf'  => Excel::download(new PacksExport, $filename . '.pdf', \Maatwebsite\Excel\Excel::DOMPDF),
+            default => back()->with('error', 'Format not supported'),
+        };
     }
 
     public function create()

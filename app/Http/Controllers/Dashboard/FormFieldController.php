@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use App\Models\FormCategory;
 use App\Models\Pack;
+use App\Exports\FormFieldsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class FormFieldController extends Controller
 {
@@ -20,8 +22,7 @@ class FormFieldController extends Controller
 
     public function datatable()
     {
-        $fields = FormField::where('is_palette_component', true)
-            ->with(['categories', 'packs'])
+        $fields = FormField::with(['categories', 'packs'])
             ->select('form_fields.*');
 
         return DataTables::of($fields)
@@ -63,7 +64,6 @@ class FormFieldController extends Controller
             ->rawColumns(['categories', 'packs', 'is_palette_component', 'actions'])
             ->make(true);
     }
-
     public function create()
     {
         $categories = FormCategory::where('is_active', true)->get();
@@ -73,20 +73,65 @@ class FormFieldController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate(FormField::validationRules());
+        $rules = FormField::validationRules();
+        $rules['step_id'] = 'nullable';
+
+        $type = $request->input('type');
+
+        // Merge config into validation_rules selon le type
+        $this->mergeTypeConfig($request, $type);
+
+        $data = $request->validate($rules);
         $data['is_palette_component'] = true;
+        $data['is_required']          = $request->boolean('is_required');
+        $data['step_id']              = null;
 
         $field = FormField::create($data);
 
-        if ($request->has('category_ids')) {
-            $field->categories()->sync($request->category_ids);
-        }
+        $field->categories()->sync($request->category_ids ?? []);
+        $field->packs()->sync($request->pack_ids ?? []);
 
-        if ($request->has('pack_ids')) {
-            $field->packs()->sync($request->pack_ids);
-        }
+        return redirect()->route('dashboard.form-fields.index')
+            ->with('success', 'Field created successfully');
+    }
 
-        return redirect()->route('dashboard.form-fields.index')->with('success', 'Field created successfully');
+    public function update(Request $request, FormField $formField)
+    {
+        $rules = FormField::validationRules();
+        $rules['step_id'] = 'nullable';
+
+        $type = $request->input('type');
+        $this->mergeTypeConfig($request, $type);
+
+        $data = $request->validate($rules);
+        $data['is_required'] = $request->boolean('is_required');
+
+        $formField->update($data);
+
+        $formField->categories()->sync($request->category_ids ?? []);
+        $formField->packs()->sync($request->pack_ids ?? []);
+
+        return redirect()->route('dashboard.form-fields.index')
+            ->with('success', 'Field updated successfully');
+    }
+
+    private function mergeTypeConfig(Request $request, string $type): void
+    {
+        $configKey = match($type) {
+            'grouped'     => 'grouped_config',
+            'slider'      => 'slider_config',
+            'matrix'      => 'matrix_config',
+            'conditional' => 'conditional_config',
+            default       => null,
+        };
+
+        if ($configKey && $request->has($configKey)) {
+            $request->merge([
+                'validation_rules' => [
+                    $configKey => $request->input($configKey)
+                ]
+            ]);
+        }
     }
 
     public function edit(FormField $formField)
@@ -96,16 +141,7 @@ class FormFieldController extends Controller
         return view('dashboard.form-fields.edit', compact('formField', 'categories', 'packs'));
     }
 
-    public function update(Request $request, FormField $formField)
-    {
-        $request->validate(FormField::validationRules());
-        $formField->update($request->all());
 
-        $formField->categories()->sync($request->category_ids ?? []);
-        $formField->packs()->sync($request->pack_ids ?? []);
-
-        return redirect()->route('dashboard.form-fields.index')->with('success', 'Field updated successfully');
-    }
 
     public function toggleStatus(FormField $formField)
     {
@@ -148,5 +184,17 @@ class FormFieldController extends Controller
         }
 
         return response()->json(['success' => true, 'attached' => $attached]);
+    }
+
+    public function export(string $format)
+    {
+        $filename = 'form_fields_' . now()->format('Y_m_d_His');
+
+        return match($format) {
+            'xlsx' => Excel::download(new FormFieldsExport, $filename . '.xlsx'),
+            'csv'  => Excel::download(new FormFieldsExport, $filename . '.csv', \Maatwebsite\Excel\Excel::CSV),
+            'pdf'  => Excel::download(new FormFieldsExport, $filename . '.pdf', \Maatwebsite\Excel\Excel::DOMPDF),
+            default => back()->with('error', 'Format not supported'),
+        };
     }
 }

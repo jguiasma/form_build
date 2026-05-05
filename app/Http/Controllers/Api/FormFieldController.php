@@ -27,8 +27,19 @@ class FormFieldController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate(FormField::validationRules());
-        $field = FormField::create($request->all());
+        $rules = FormField::validationRules();
+        $rules['step_id'] = 'nullable';
+
+        if ($request->input('type') === 'grouped' && $request->has('grouped_config')) {
+            $request->merge([
+                'validation_rules' => [
+                    'grouped_config' => $request->input('grouped_config')
+                ]
+            ]);
+        }
+
+        $data = $request->validate($rules);
+        $field = FormField::create($data);
 
         if ($request->has('category_ids')) {
             $field->categories()->sync($request->category_ids);
@@ -37,7 +48,10 @@ class FormFieldController extends Controller
             $field->packs()->sync($request->pack_ids);
         }
 
-        return response()->json($field->load(['options', 'categories', 'packs']), 201);
+        return response()->json(
+            $field->load(['options', 'categories', 'packs']),
+            201
+        );
     }
 
     public function show(FormField $formField)
@@ -47,8 +61,19 @@ class FormFieldController extends Controller
 
     public function update(Request $request, FormField $formField)
     {
-        $request->validate(FormField::validationRules());
-        $formField->update($request->all());
+        $rules = FormField::validationRules();
+        $rules['step_id'] = 'nullable';
+
+        if ($request->input('type') === 'grouped' && $request->has('grouped_config')) {
+            $request->merge([
+                'validation_rules' => [
+                    'grouped_config' => $request->input('grouped_config')
+                ]
+            ]);
+        }
+
+        $data = $request->validate($rules);
+        $formField->update($data);
 
         $formField->categories()->sync($request->category_ids ?? []);
         $formField->packs()->sync($request->pack_ids ?? []);
@@ -59,6 +84,6 @@ class FormFieldController extends Controller
     public function destroy(FormField $formField)
     {
         $formField->delete();
-        return response()->json(['message' => 'Field deleted']);
+        return response()->json(['message' => __('form_fields.deleted')]);
     }
 }

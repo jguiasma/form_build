@@ -17,7 +17,7 @@ class UserController extends Controller
     {
         $request->validate(User::validationRules());
         $user = User::create($request->all());
-        return response()->json($user->load('role'), 201);
+        return response()->json($user->load('role'), 201 , ['message' => __('user.created')]);
     }
 
     public function show(User $user)
@@ -33,12 +33,12 @@ class UserController extends Controller
 
         $request->validate($rules);
         $user->update($request->all());
-        return response()->json($user->load('role'));
+        return response()->json($user->load('role'), ['message' => __('user.updated')]);
     }
 
     public function destroy(User $user)
     {
         $user->delete();
-        return response()->json(['message' => 'User deleted']);
+        return response()->json(['message' => __('user.deleted')]);
     }
 }

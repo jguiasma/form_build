@@ -41,7 +41,7 @@ class FormField extends Model
             'step_id' => ['nullable', 'exists:form_steps,id'],
             'label' => ['required', 'string', 'max:255'],
             'field_key' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string', 'in:text,textarea,number,email,password,select,radio,checkbox,date,file,submit,signature,phone,divider,rating,url,location,voice,payment,spacer,grouped'],
+            'type' => ['required', 'string', 'in:text,textarea,number,email,password,select,radio,checkbox,date,file,submit,signature,phone,divider,rating,url,location,voice,payment,spacer,grouped,slider,conditional,matrix'],
             'placeholder' => ['nullable', 'string', 'max:255'],
             'default_value' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],

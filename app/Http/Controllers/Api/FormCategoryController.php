@@ -17,7 +17,7 @@ class FormCategoryController extends Controller
     {
         $request->validate(FormCategory::validationRules());
         $category = FormCategory::create($request->all());
-        return response()->json($category, 201);
+        return response()->json($category, 201, ['message' => __('form_category.created')]);
     }
 
     public function show(FormCategory $formCategory)
@@ -29,12 +29,12 @@ class FormCategoryController extends Controller
     {
         $request->validate(FormCategory::validationRules());
         $formCategory->update($request->all());
-        return response()->json($formCategory);
+        return response()->json($formCategory, ['message' => __('form_category.updated')]);
     }
 
     public function destroy(FormCategory $formCategory)
     {
         $formCategory->delete();
-        return response()->json(['message' => 'Category deleted']);
+        return response()->json(['message' => __('form_category.deleted')]);
     }
 }

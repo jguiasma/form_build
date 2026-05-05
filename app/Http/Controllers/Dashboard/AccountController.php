@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Exports\AccountsExport;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Role;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
 class AccountController extends Controller
@@ -20,7 +22,8 @@ class AccountController extends Controller
         $accounts = Account::with('role')->select('accounts.*');
 
         return DataTables::of($accounts)
-             ->addColumn('actions', fn($row) => '
+            ->addColumn('role', fn($row) => $row->role->type ?? '-')
+            ->addColumn('actions', fn($row) => '
                 <a href="' . route('dashboard.accounts.show', $row->id) . '" class="btn btn-sm btn-info">
                     <i class="bi bi-eye"></i>
                 </a>
@@ -34,9 +37,20 @@ class AccountController extends Controller
                     </button>
                 </form>
             ')
-            ->addColumn('role', fn($row) => $row->role->type ?? '-')
             ->rawColumns(['actions'])
             ->make(true);
+    }
+
+    public function export(string $format)
+    {
+        $filename = 'accounts_' . now()->format('Y_m_d_His');
+
+        return match($format) {
+            'xlsx' => Excel::download(new AccountsExport, $filename . '.xlsx'),
+            'csv'  => Excel::download(new AccountsExport, $filename . '.csv', \Maatwebsite\Excel\Excel::CSV),
+            'pdf'  => Excel::download(new AccountsExport, $filename . '.pdf', \Maatwebsite\Excel\Excel::DOMPDF),
+            default => back()->with('error', 'Format not supported'),
+        };
     }
 
     public function create()
@@ -49,7 +63,7 @@ class AccountController extends Controller
     {
         $request->validate(Account::validationRules());
         Account::create($request->all());
-        return redirect()->route('dashboard.accounts.index')->with('success', 'Account created successfully');
+        return redirect()->route('dashboard.accounts.index')->with('success', __('account_created'));
     }
 
     public function edit(Account $account)
@@ -64,7 +78,7 @@ class AccountController extends Controller
         $rules['email'] = ['required', 'string', 'email', 'unique:accounts,email,' . $account->id, 'max:254'];
         $request->validate($rules);
         $account->update($request->all());
-        return redirect()->route('dashboard.accounts.index')->with('success', 'Account updated successfully');
+        return redirect()->route('dashboard.accounts.index')->with('success', __('account_updated'));
     }
 
     public function show(Account $account)
@@ -75,6 +89,6 @@ class AccountController extends Controller
     public function destroy(Account $account)
     {
         $account->delete();
-        return redirect()->route('dashboard.accounts.index')->with('success', 'Account deleted successfully');
+        return redirect()->route('dashboard.accounts.index')->with('success', __('account_deleted'));
     }
 }

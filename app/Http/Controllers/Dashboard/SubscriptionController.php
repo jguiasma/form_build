@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Exports\SubscriptionsExport;
 use App\Http\Controllers\Controller;
-use App\Models\Subscription;
 use App\Models\Account;
 use App\Models\Pack;
+use App\Models\Subscription;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
 class SubscriptionController extends Controller
@@ -21,7 +23,9 @@ class SubscriptionController extends Controller
         $subscriptions = Subscription::with(['account', 'pack'])->select('subscriptions.*');
 
         return DataTables::of($subscriptions)
-           ->addColumn('actions', fn($row) => '
+            ->addColumn('account', fn($row) => $row->account->name ?? '-')
+            ->addColumn('pack', fn($row) => $row->pack->title ?? '-')
+            ->addColumn('actions', fn($row) => '
                 <a href="' . route('dashboard.subscriptions.show', $row->id) . '" class="btn btn-sm btn-info">
                     <i class="bi bi-eye"></i>
                 </a>
@@ -35,10 +39,20 @@ class SubscriptionController extends Controller
                     </button>
                 </form>
             ')
-            ->addColumn('account', fn($row) => $row->account->name ?? '-')
-            ->addColumn('pack', fn($row) => $row->pack->title ?? '-')
             ->rawColumns(['actions'])
             ->make(true);
+    }
+
+    public function export(string $format)
+    {
+        $filename = 'subscriptions_' . now()->format('Y_m_d_His');
+
+        return match($format) {
+            'xlsx' => Excel::download(new SubscriptionsExport, $filename . '.xlsx'),
+            'csv'  => Excel::download(new SubscriptionsExport, $filename . '.csv', \Maatwebsite\Excel\Excel::CSV),
+            'pdf'  => Excel::download(new SubscriptionsExport, $filename . '.pdf', \Maatwebsite\Excel\Excel::DOMPDF),
+            default => back()->with('error', 'Format not supported'),
+        };
     }
 
     public function create()
@@ -68,6 +82,7 @@ class SubscriptionController extends Controller
         $subscription->update($request->all());
         return redirect()->route('dashboard.subscriptions.index')->with('success', 'Subscription updated successfully');
     }
+
     public function show(Subscription $subscription)
     {
         return view('dashboard.subscriptions.show', compact('subscription'));

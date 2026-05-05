@@ -17,7 +17,7 @@ class PackController extends Controller
     {
         $request->validate(Pack::validationRules());
         $pack = Pack::create($request->all());
-        return response()->json($pack, 201);
+        return response()->json($pack, 201, ['message' => __('pack.created')]);
     }
 
     public function show(Pack $pack)
@@ -29,12 +29,12 @@ class PackController extends Controller
     {
         $request->validate(Pack::validationRules());
         $pack->update($request->all());
-        return response()->json($pack);
+        return response()->json($pack , ['message' => __('pack.updated')]);
     }
 
     public function destroy(Pack $pack)
     {
         $pack->delete();
-        return response()->json(['message' => 'Pack deleted']);
+        return response()->json(['message' => __('pack.deleted')]);
     }
 }

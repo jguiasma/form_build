@@ -8,10 +8,29 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span><i class="bi bi-tag-fill me-2"></i>All Form Categories</span>
+        <div class="d-flex gap-2">
+            <div class="dropdown">
+                <button class="btn btn-success btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-download me-1"></i> Export
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" href="{{ route('dashboard.form-categories.export', 'xlsx') }}">
+                            <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('dashboard.form-categories.export', 'csv') }}">
+                            <i class="bi bi-filetype-csv me-2 text-primary"></i> CSV
+                        </a>
+                    </li>
+                </ul>
+            </div>
         <a href="{{ route('dashboard.form-categories.create') }}" class="btn btn-primary btn-sm">
             <i class="bi bi-plus-lg me-1"></i> New Category
         </a>
     </div>
+</div>
     <div class="card-body">
         <table id="categories-table" class="table table-hover w-100">
             <thead>

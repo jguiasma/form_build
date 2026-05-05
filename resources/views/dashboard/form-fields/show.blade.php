@@ -80,6 +80,131 @@
                         <th class="text-muted">Created At</th>
                         <td>{{ $formField->created_at->format('d M Y, H:i') }}</td>
                     </tr>
+                    @if($formField->type === 'grouped')
+                        @php
+                            $groupedConfig = $formField->validation_rules['grouped_config'] ?? null;
+                        @endphp
+                        @if($groupedConfig)
+                        <tr>
+                            <th class="text-muted">Grouped Config</th>
+                            <td>
+                                <div class="d-flex flex-column gap-2">
+                                    @foreach($groupedConfig['rows'] ?? [] as $rowIndex => $row)
+                                        <div class="border rounded p-2 bg-light">
+                                            <small class="fw-bold text-muted d-block mb-1">Row {{ $rowIndex }}</small>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                @foreach($row['cols'] ?? [] as $colIndex => $col)
+                                                    <span class="badge bg-primary">
+                                                        {{ $col['label'] ?? 'Field '.$colIndex }}
+                                                        <span class="opacity-75">({{ $col['type'] ?? '-' }})</span>
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </td>
+                        </tr>
+                        @endif
+                    @endif
+                    {{-- SLIDER --}}
+                    @if($formField->type === 'slider')
+                        @php $sliderConfig = $formField->validation_rules['slider_config'] ?? null; @endphp
+                        @if($sliderConfig)
+                        <tr>
+                            <th class="text-muted">Slider Config</th>
+                            <td>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <span class="badge bg-secondary">
+                                        Mode: {{ $sliderConfig['mode'] ?? 'single' }}
+                                    </span>
+                                    <span class="badge bg-secondary">
+                                        {{ $sliderConfig['min'] ?? 0 }}
+                                        → {{ $sliderConfig['max'] ?? 100 }}
+                                    </span>
+                                    <span class="badge bg-secondary">
+                                        Step: {{ $sliderConfig['step'] ?? 1 }}
+                                    </span>
+                                    @if(!empty($sliderConfig['unit']))
+                                        <span class="badge bg-info">
+                                            Unit: {{ $sliderConfig['unit'] }}
+                                        </span>
+                                    @endif
+                                    <span class="badge bg-{{ ($sliderConfig['show_value'] ?? false) ? 'success' : 'danger' }}">
+                                        Show value: {{ ($sliderConfig['show_value'] ?? false) ? 'Yes' : 'No' }}
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                        @endif
+                    @endif
+
+                    {{-- MATRIX --}}
+                    @if($formField->type === 'matrix')
+                        @php $matrixConfig = $formField->validation_rules['matrix_config'] ?? null; @endphp
+                        @if($matrixConfig)
+                        <tr>
+                            <th class="text-muted">Matrix Config</th>
+                            <td>
+                                <div class="mb-2">
+                                    <span class="badge bg-primary me-1">
+                                        Scale: {{ $matrixConfig['scale_type'] ?? 'numeric' }}
+                                    </span>
+                                    <span class="badge bg-secondary">
+                                        Display: {{ $matrixConfig['display'] ?? 'radio' }}
+                                    </span>
+                                </div>
+                                <div class="d-flex flex-column gap-1">
+                                    @foreach($matrixConfig['rows'] ?? [] as $row)
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="bi bi-dash me-1"></i>{{ $row }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                                @if(!empty($matrixConfig['text_labels']))
+                                    <div class="mt-2">
+                                        <small class="text-muted">Labels: </small>
+                                        <code>{{ $matrixConfig['text_labels'] }}</code>
+                                    </div>
+                                @endif
+                            </td>
+                        </tr>
+                        @endif
+                    @endif
+
+                    {{-- CONDITIONAL --}}
+                    @if($formField->type === 'conditional')
+                        @php $condConfig = $formField->validation_rules['conditional_config'] ?? null; @endphp
+                        @if($condConfig)
+                        <tr>
+                            <th class="text-muted">Condition</th>
+                            <td>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="badge bg-primary">
+                                        {{ $condConfig['trigger_field_key'] ?? '-' }}
+                                    </span>
+                                    <span class="badge bg-warning text-dark">
+                                        {{ match($condConfig['operator'] ?? 'equals') {
+                                            'equals'      => '=',
+                                            'not_equals'  => '≠',
+                                            'contains'    => '∋ contains',
+                                            'greater_than'=> '>',
+                                            'less_than'   => '<',
+                                            default       => $condConfig['operator'] ?? '='
+                                        } }}
+                                    </span>
+                                    <span class="badge bg-success">
+                                        "{{ $condConfig['trigger_value'] ?? '-' }}"
+                                    </span>
+                                    <span class="text-muted small">→ shows</span>
+                                    <span class="badge bg-info">
+                                        {{ $condConfig['inner_type'] ?? 'text' }} field
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                        @endif
+                    @endif
                 </table>
             </div>
         </div>

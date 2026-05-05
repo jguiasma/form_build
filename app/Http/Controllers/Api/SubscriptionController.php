@@ -17,7 +17,7 @@ class SubscriptionController extends Controller
     {
         $request->validate(Subscription::validationRules());
         $subscription = Subscription::create($request->all());
-        return response()->json($subscription->load(['user', 'pack']), 201);
+        return response()->json($subscription->load(['user', 'pack']), 201 , ['message' => __('subscription.created')]);
     }
 
     public function show(Subscription $subscription)
@@ -29,12 +29,12 @@ class SubscriptionController extends Controller
     {
         $request->validate(Subscription::validationRules());
         $subscription->update($request->all());
-        return response()->json($subscription->load(['user', 'pack']));
+        return response()->json($subscription->load(['user', 'pack']), ['message' => __('subscription.updated')]);
     }
 
     public function destroy(Subscription $subscription)
     {
         $subscription->delete();
-        return response()->json(['message' => 'Subscription deleted']);
+        return response()->json(['message' => __('subscription.deleted')]);
     }
 }
