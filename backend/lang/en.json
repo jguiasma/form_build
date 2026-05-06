@@ -1,0 +1,30 @@
+{
+    "account.deleted": "Account deleted successfully.",
+    "account.updated": "Account updated successfully.",
+    "account.created": "Account created successfully.",
+
+    "form_category.created": "Form category created successfully.",
+    "form_category.updated": "Form category updated successfully.",
+    "form_category.deleted": "Form category deleted successfully.",
+
+    "form_fields.created": "Form field created successfully.",
+    "form_fields.updated": "Form field updated successfully.",
+    "form_fields.deleted": "Form field deleted successfully.",
+
+    "pack.created": "Pack created successfully.",
+    "pack.updated": "Pack updated successfully.",
+    "pack.deleted": "Pack deleted successfully.",
+
+    "subscription.created": "Subscription created successfully.",
+    "subscription.updated": "Subscription updated successfully.",
+    "subscription.deleted": "Subscription deleted successfully.",
+
+    "user.created": "User created successfully.",
+    "user.updated": "User updated successfully.",
+    "user.deleted": "User deleted successfully.",
+
+    "form_type.created": "Form type created successfully.",
+    "form_type.updated": "Form type updated successfully.",
+    "form_type.deleted": "Form type deleted successfully."
+
+}
