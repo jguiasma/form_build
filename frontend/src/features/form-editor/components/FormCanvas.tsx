@@ -19,7 +19,10 @@ const FormCanvas: React.FC = () => {
         const dropResult = monitor.getDropResult() as any;
         if (dropResult && dropResult.dropMode === 'SAME_ROW') {
            if (item.isPaletteItem) {
-             addField(activeStepId!, item.type, 'SAME_ROW', dropResult.targetFieldId);
+             addField(activeStepId!, item.type, 'SAME_ROW', dropResult.targetFieldId, 'right', {
+               validation_rules: item.validation_rules,
+               options: item.options,
+             });
            }
         }
         return; // Important: Stop here if dropped on a child
@@ -27,7 +30,10 @@ const FormCanvas: React.FC = () => {
       
       // Otherwise, vertical drop on the canvas background (new row)
       if (item.isPaletteItem && activeStepId) {
-        addField(activeStepId, item.type, 'NEW_ROW');
+        addField(activeStepId, item.type, 'NEW_ROW', null, 'bottom', {
+          validation_rules: item.validation_rules,
+          options: item.options,
+        });
       }
     },
     collect: (monitor) => ({
@@ -60,7 +66,7 @@ const FormCanvas: React.FC = () => {
 
   return (
     <div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm p-10 min-h-[600px] flex flex-col">
-      <div ref={drop} className="space-y-6 flex-1 min-h-[200px]">
+      <div ref={(node) => { drop(node); }} className="space-y-6 flex-1 min-h-[200px]">
         {rows.length === 0 && !isOver && (
           <div className="border-2 border-dashed border-[#1148ad]/30 bg-[#1148ad]/5 rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-colors hover:bg-[#1148ad]/10">
             <div className="size-10 rounded-full bg-white flex items-center justify-center text-[#1148ad] shadow-sm mb-3">
@@ -95,4 +101,3 @@ const FormCanvas: React.FC = () => {
 };
 
 export default FormCanvas;
-

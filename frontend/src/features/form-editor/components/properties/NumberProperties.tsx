@@ -71,4 +71,3 @@ const NumberProperties: React.FC<Props> = ({ field, updateField }) => {
 };
 
 export default NumberProperties;
-

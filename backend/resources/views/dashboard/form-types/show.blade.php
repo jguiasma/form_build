@@ -28,20 +28,6 @@
                         <td>{{ $formType->name }}</td>
                     </tr>
                     <tr>
-                        <th class="text-muted">Category</th>
-                        <td>
-                            @if($formType->category)
-                                <a href="{{ route('dashboard.form-categories.show', $formType->category->id) }}">
-                                    <span class="badge bg-secondary">
-                                        {{ $formType->category->name }}
-                                    </span>
-                                </a>
-                            @else
-                                <span class="text-muted">-</span>
-                            @endif
-                        </td>
-                    </tr>
-                    <tr>
                         <th class="text-muted">Description</th>
                         <td>{{ $formType->description ?? '-' }}</td>
                     </tr>

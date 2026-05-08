@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../../auth/store/authStore";
 import { profileApi } from "../../profile/api/profile.api";
-import { useCreateForm, useGetFieldTypes, useGetGlobalStats } from "../../form-editor/hooks/useFormApi";
+import { useGetGlobalStats } from "../../form-editor/hooks/useFormApi";
 import { FooterLink, MiniChart, StatCard, TableRow } from "../components/DashboardUI";
-import { CreateFormModal } from "../components/CreateFormModal";
 import { DashboardHeader } from "../components/DashboardHeader";
 import { DashboardSidebar } from "../components/DashboardSidebar";
 import { MyFormsView } from "../components/MyFormsView";
@@ -22,70 +21,13 @@ const Dashboard: React.FC = () => {
   const { email, clearAlerts, setView } = useAuthStore();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [newFormDetails, setNewFormDetails] = useState({
-    title: "",
-    description: "",
-    form_type_id: 0,
-  });
 
   const { data: profile } = useQuery({
     queryKey: ["profileProgress"],
     queryFn: profileApi.getProgress,
   });
 
-  const createFormMutation = useCreateForm();
-  const { data: formTypes } = useGetFieldTypes();
   const { data: globalStats } = useGetGlobalStats();
-
-  useEffect(() => {
-    if (formTypes?.length && newFormDetails.form_type_id === 0) {
-      setNewFormDetails((prev) => ({ ...prev, form_type_id: Number(formTypes[0].id) }));
-    }
-  }, [formTypes, newFormDetails.form_type_id]);
-
-  const handleOpenModal = () => {
-    setFormError(null);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setFormError(null);
-    setNewFormDetails({
-      title: "",
-      description: "",
-      form_type_id: Number(formTypes?.[0]?.id ?? 0),
-    });
-  };
-
-  const handleNewFormSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setFormError(null);
-
-    const form_type_id = newFormDetails.form_type_id || formTypes?.[0]?.id;
-    if (!form_type_id) {
-      setFormError("No form type available. Please wait for types to load.");
-      return;
-    }
-
-    try {
-      const newForm = await createFormMutation.mutateAsync({
-        title: newFormDetails.title || "Untitled Form",
-        description: newFormDetails.description,
-        form_type_id,
-      });
-      navigate(`/editor/${newForm.id}`);
-    } catch (error: any) {
-      const errors = error.response?.data?.errors;
-      if (errors) {
-        setFormError(Object.values(errors).flat().join(" "));
-      } else {
-        setFormError(error.response?.data?.message || "Failed to create form. Please try again.");
-      }
-    }
-  };
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
@@ -171,13 +113,13 @@ const Dashboard: React.FC = () => {
                     <span className="material-symbols-outlined text-xl">download</span>
                   </button>
                   <button
-                    onClick={handleOpenModal}
+                    onClick={() => navigate("/categories")}
                     className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-[#1148ad] text-white rounded-2xl text-sm font-black hover:bg-[#0033cc] transition-all shadow-xl shadow-blue-500/20 active:scale-95"
                   >
                     <span className="material-symbols-outlined text-lg">
-                      {createFormMutation.isPending ? "hourglass_empty" : "add_circle"}
+                      add_circle
                     </span>
-                    {createFormMutation.isPending ? "Creating..." : "New Form"}
+                    New Form
                   </button>
                 </div>
               </div>
@@ -277,7 +219,7 @@ const Dashboard: React.FC = () => {
         <footer className="mt-auto px-4 sm:px-10 py-12 bg-white border-t border-slate-50 relative overflow-hidden">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-8 text-[13px] font-bold text-slate-400">
             <div className="flex items-center gap-6">
-              <p>� 2026 AI FormFlow</p>
+              <p>� 2026 FormFlow</p>
               <div className="flex items-center gap-2">
                 <div className="size-2 rounded-full bg-emerald-500 animate-pulse"></div>
                 <span className="text-emerald-600/70">All systems online</span>
@@ -292,16 +234,6 @@ const Dashboard: React.FC = () => {
           </div>
         </footer>
       </div>
-
-      <CreateFormModal
-        isOpen={isModalOpen}
-        error={formError}
-        formDetails={newFormDetails}
-        formTypes={formTypes}
-        onChange={setNewFormDetails}
-        onClose={handleCloseModal}
-        onSubmit={handleNewFormSubmit}
-      />
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }

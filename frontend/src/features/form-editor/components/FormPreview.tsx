@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { FormField } from '../types/form-builder.types';
+import { getConditionalLabels, getMatrixColumns, getMatrixRows, getSliderConfig } from '../lib/fieldConfig';
 
 
 interface FormPreviewProps {
@@ -217,37 +218,182 @@ const FormPreview: React.FC<FormPreviewProps> = ({ onClose }) => {
                 </div>
             </div>
         );
-      case 'grouped':
+      case 'slider': {
+        const config = getSliderConfig(field.validation_rules?.slider_config);
+        const { min, max, step, unit, showValue } = config;
+        const currentValue = value === '' ? Number(field.default_value ?? min) : Number(value);
+        const safeValue = Math.min(Math.max(currentValue, min), max);
+
         return (
           <div key={field.id} className="space-y-3">
             {labelArea}
-            {/* Rue */}
-            <input 
-              type="text" 
-              placeholder="Rue" 
-              value={value?.rue || ''}
-              onChange={(e) => handleInputChange(field.id!, { ...value, rue: e.target.value })}
-              className={inputClasses} 
+            <input
+              type="range"
+              min={min}
+              max={max}
+              step={step}
+              value={safeValue}
+              onChange={(e) => handleInputChange(field.id!, e.target.value)}
+              className="w-full accent-[#1148ad]"
             />
-            {/* Ville + Code postal */}
-            <div className="grid grid-cols-2 gap-3">
-              <input 
-                type="text" 
-                placeholder="Ville" 
-                value={value?.ville || ''}
-                onChange={(e) => handleInputChange(field.id!, { ...value, ville: e.target.value })}
-                className={inputClasses} 
-              />
-              <input 
-                type="text" 
-                placeholder="Code postal" 
-                value={value?.zip || ''}
-                onChange={(e) => handleInputChange(field.id!, { ...value, zip: e.target.value })}
-                className={inputClasses} 
-              />
+            <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <span>{min}{unit}</span>
+              {showValue && <span className="text-[#1148ad]">{safeValue}{unit}</span>}
+              <span>{max}{unit}</span>
             </div>
           </div>
         );
+      }
+      case 'matrix': {
+        const config = field.validation_rules?.matrix_config || {};
+        const rows = getMatrixRows(config);
+        const columns = getMatrixColumns(config);
+        const display = config.display || "radio";
+
+        return (
+          <div key={field.id} className="space-y-3">
+            {labelArea}
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <div className="grid bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest" style={{ gridTemplateColumns: `1.2fr repeat(${columns.length}, minmax(0, 1fr))` }}>
+                <div className="p-3" />
+                {columns.map((column: string, index: number) => (
+                  <div key={index} className="p-3 text-center truncate">{column}</div>
+                ))}
+              </div>
+              {rows.map((row: string, rowIndex: number) => (
+                <div key={rowIndex} className="grid border-t border-slate-100" style={{ gridTemplateColumns: `1.2fr repeat(${columns.length}, minmax(0, 1fr))` }}>
+                  <div className="p-3 text-xs font-bold text-slate-600 truncate">{row}</div>
+                  {columns.map((column: string, colIndex: number) => {
+                    const valueKey = `${field.id}_${rowIndex}`;
+                    const selected = formValues[valueKey] === column;
+
+                    return (
+                      <button
+                        key={colIndex}
+                        type="button"
+                        onClick={() => handleInputChange(valueKey, column)}
+                        className="p-3 flex justify-center"
+                      >
+                        {display === "slider" ? (
+                          <span className={`h-1.5 w-full rounded-full ${selected ? 'bg-[#1148ad]' : 'bg-slate-200'}`} />
+                        ) : (
+                          <span className={`size-4 rounded-full border-2 ${selected ? 'bg-[#1148ad] border-[#1148ad]' : 'border-slate-300 bg-slate-50'}`} />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      case 'conditional': {
+        const { conditionLabel, actionLabel } = getConditionalLabels(field.validation_rules?.conditional_config);
+
+        return (
+          <div key={field.id} className="space-y-3">
+            {labelArea}
+            <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-3">
+              <div className="text-xs font-black uppercase tracking-widest text-[#1148ad]">
+                {conditionLabel}
+              </div>
+              <div className="rounded-lg border border-dashed border-blue-200 bg-white p-3 text-xs font-bold text-slate-500">
+                {actionLabel}
+              </div>
+            </div>
+          </div>
+        );
+      }
+      case 'grouped': {
+        const config = field.validation_rules?.grouped_config;
+
+        if (!config || !config.rows) {
+          return (
+            <div key={field.id} className="space-y-3">
+              {labelArea}
+              <input
+                type="text"
+                placeholder="Field 1"
+                className={inputClasses}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <input type="text" placeholder="Field 2" className={inputClasses} />
+                <input type="text" placeholder="Field 3" className={inputClasses} />
+              </div>
+            </div>
+          );
+        }
+
+        const rows = config.rows as Record<
+          string,
+          {
+            num_cols: number;
+            cols: Record<string, { type: string; label?: string; placeholder?: string }>;
+          }
+        >;
+
+        return (
+          <div key={field.id} className="space-y-4">
+            {labelArea}
+
+            {Object.entries(rows).map(([rowKey, row]) => {
+              const cols = row.cols ? Object.values(row.cols) : [];
+              const numCols = Math.max(cols.length, 1);
+
+              return (
+                <div
+                  key={rowKey}
+                  className="grid gap-3"
+                  style={{ gridTemplateColumns: `repeat(${numCols}, minmax(0, 1fr))` }}
+                >
+                  {cols.map((col, colIndex) => {
+                    const valueKey = `${field.id}_${rowKey}_${colIndex}`;
+                    const colValue = formValues[valueKey] || "";
+
+                    return (
+                      <div key={colIndex} className="space-y-1">
+                        {col.label && (
+                          <label className="text-xs font-bold text-slate-700">
+                            {col.label}
+                          </label>
+                        )}
+
+                        {col.type === "textarea" ? (
+                          <textarea
+                            value={colValue}
+                            onChange={(e) => handleInputChange(valueKey, e.target.value)}
+                            placeholder={col.placeholder || ""}
+                            className={`${inputClasses} min-h-[80px]`}
+                          />
+                        ) : col.type === "select" ? (
+                          <select
+                            value={colValue}
+                            onChange={(e) => handleInputChange(valueKey, e.target.value)}
+                            className={inputClasses}
+                          >
+                            <option value="">
+                              {col.placeholder || "Select..."}
+                            </option>
+                          </select>
+                        ) : (
+                          <input
+                            type={col.type || "text"}
+                            value={colValue}
+                            onChange={(e) => handleInputChange(valueKey, e.target.value)}
+                            placeholder={col.placeholder || ""}
+                            className={inputClasses}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        );
+      }
       case 'location':
         return (
             <div key={field.id} className="space-y-1">
@@ -421,7 +567,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ onClose }) => {
                                 className={`text-xs font-bold text-slate-400 transition-all duration-300 cursor-pointer ${isDescExpanded ? 'max-h-[300px] overflow-visible' : 'max-h-8 line-clamp-2'}`}
                             >
                                 {schema.description || 'Tailor your experience within the ecosystem'}
-                                {!isDescExpanded && (schema.description?.length > 80) && <span className="text-[#1148ad] ml-1">...</span>}
+                                {!isDescExpanded && ((schema.description?.length ?? 0) > 80) && <span className="text-[#1148ad] ml-1">...</span>}
                             </p>
                         </div>
                     </div>
@@ -511,4 +657,3 @@ const FormPreview: React.FC<FormPreviewProps> = ({ onClose }) => {
 };
 
 export default FormPreview;
-

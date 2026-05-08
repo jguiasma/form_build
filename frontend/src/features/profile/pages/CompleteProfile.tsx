@@ -129,4 +129,3 @@ const CompleteProfile: React.FC = () => {
 };
 
 export default CompleteProfile;
-

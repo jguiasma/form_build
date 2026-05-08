@@ -37,4 +37,3 @@ export interface AuthState {
   
   clearAlerts: () => void;
 }
-

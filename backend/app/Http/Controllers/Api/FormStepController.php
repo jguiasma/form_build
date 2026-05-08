@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Form;
+use App\Models\FormAnswer;
 use App\Models\FormStep;
 use Illuminate\Http\Request;
 
@@ -36,5 +38,57 @@ class FormStepController extends Controller
     {
         $formStep->delete();
         return response()->json(['message' => 'Step deleted']);
+    }
+
+    public function saveAnswers(Request $request, Form $form, FormStep $step)
+    {
+        if ($step->form_id !== $form->id) {
+            abort(404);
+        }
+
+        $data = $request->validate([
+            'response_id' => ['required', 'exists:form_responses,id'],
+            'answers' => ['required', 'array'],
+            'answers.*.field_id' => ['required', 'exists:form_fields,id'],
+            'answers.*.value' => ['nullable', 'string'],
+        ]);
+
+        $response = $form->responses()
+            ->whereKey($data['response_id'])
+            ->firstOrFail();
+
+        foreach ($data['answers'] as $answer) {
+            FormAnswer::updateOrCreate(
+                [
+                    'response_id' => $response->id,
+                    'field_id' => $answer['field_id'],
+                ],
+                [
+                    'value' => $answer['value'] ?? null,
+                ]
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+        ]);
+    }
+
+    public function reorderSteps(Request $request, Form $form)
+    {
+        $data = $request->validate([
+            'order' => ['required', 'array'],
+            'order.*' => ['required', 'integer', 'exists:form_steps,id'],
+        ]);
+
+        foreach ($data['order'] as $index => $stepId) {
+            $form->steps()
+                ->whereKey($stepId)
+                ->update(['step_order' => $index + 1]);
+        }
+
+        return response()->json([
+            'success' => true,
+        ]);
     }
 }

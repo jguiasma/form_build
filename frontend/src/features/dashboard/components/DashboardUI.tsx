@@ -282,4 +282,3 @@ export const MiniChart = ({ data }: { data: { date: string, count: number }[] })
     </div>
   );
 };
-

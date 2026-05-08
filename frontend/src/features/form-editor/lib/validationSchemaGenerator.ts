@@ -12,7 +12,7 @@ export const generateFieldSchema = (field: FormField) => {
     case 'number':
       schema = z.preprocess(
         (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
-        z.number({ invalid_type_error: 'Please enter a valid number' })
+        z.number({ message: 'Please enter a valid number' })
       );
       break;
     case 'checkbox':

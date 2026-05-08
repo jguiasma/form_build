@@ -23,6 +23,7 @@ export const Packs = () => {
 
   if (isError) {
     return <div className="text-center py-20 text-red-500">Failed to load packs.</div>;
+
   }
 
   return (
@@ -62,7 +63,8 @@ export const Packs = () => {
         <div className="grid md:grid-cols-3 gap-15 items-start">
           {packs.map((pack, index) => {
             const isFeatured = index === 1;
-            const price = yearly ? Math.round(pack.amount * 0.8) : pack.amount;
+            const amount = pack.amount ?? 0;
+            const price = yearly ? Math.round(amount * 0.8) : amount;
             const buttonVariant = index === 0 ? "default" : index === 1 ? "primary" : "dark";
 
             return (
@@ -87,7 +89,7 @@ export const Packs = () => {
                   <span className="text-4xl font-black text-gray-900">DT{price}</span>
                   <span className="text-gray-400 text-sm">/mo</span>
 
-                  {yearly && pack.amount > 0 && (
+                  {yearly && amount > 0 && (
                     <span className="text-green-600 text-xs ml-1">billed yearly</span>
                   )}
                 </div>

@@ -49,10 +49,12 @@ Route::prefix('dashboard')->name('dashboard.')->group(function () {
         Route::post('form-fields/{formField}/toggle-pack/{pack}', [FormFieldController::class, 'togglePack'])->name('form-fields.toggle-pack');
         Route::get('form-fields/export/{format}', [FormFieldController::class, 'export'])->name('form-fields.export');
 
- //Form Types
+        //Form Types
         Route::get('form-types/datatable', [FormTypeController::class, 'datatable'])->name('form-types.datatable');
         Route::resource('form-types', FormTypeController::class);
         Route::post('form-types/{formType}/toggle', [FormTypeController::class, 'toggleStatus'])->name('form-types.toggle');
         Route::get('form-types/export/{format}', [FormTypeController::class, 'export'])->name('form-types.export');
+
+
     });
 });

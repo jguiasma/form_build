@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetForm, useGetFormResponses } from "../../form-editor/hooks/useFormApi";
 import { QRCodeCanvas } from "qrcode.react";
@@ -30,7 +31,8 @@ export const SubmissionsView = ({ formId, onEdit, onBack }: { formId: number | n
   }, [logSearch, logStatusFilter, logSortBy, selectedVersion]);
 
   const selectedResponse = responses?.find((r: any) => r.id === selectedResponseId) || responses?.[0];
-  const publicUrl = `${import.meta.env.VITE_FRONTEND_URL || window.location.origin}/f/${form?.uuid}`;
+  const latestShareLink = form?.versions?.[form.versions.length - 1]?.share_link;
+  const publicUrl = `${import.meta.env.VITE_FRONTEND_URL || window.location.origin}/f/${latestShareLink || ""}`;
 
   const handleRefresh = async () => {
     await Promise.all([
@@ -301,7 +303,7 @@ export const SubmissionsView = ({ formId, onEdit, onBack }: { formId: number | n
            </div>
            <div className="flex flex-col lg:flex-row items-center gap-8 relative z-10">
               <div className="size-20 bg-white rounded-3xl shadow-sm flex items-center justify-center border border-blue-50 shrink-0 p-3">
-                 {form?.uuid && <QRCodeCanvas value={publicUrl} size={56} />}
+                 {latestShareLink && <QRCodeCanvas value={publicUrl} size={56} />}
               </div>
               <div className="flex-1 text-center lg:text-left">
                 <h4 className="text-xl font-black text-slate-900">Your form is live!</h4>
@@ -666,7 +668,7 @@ export const SubmissionsView = ({ formId, onEdit, onBack }: { formId: number | n
               </div>
 
               <div className="bg-slate-50 rounded-[2.5rem] p-12 flex items-center justify-center border border-slate-100 mb-8">
-                 {form?.uuid && <QRCodeCanvas value={publicUrl} size={200} id="modal-qr" />}
+                 {latestShareLink && <QRCodeCanvas value={publicUrl} size={200} id="modal-qr" />}
               </div>
 
               <div className="space-y-3">
@@ -693,6 +695,5 @@ export const SubmissionsView = ({ formId, onEdit, onBack }: { formId: number | n
     </div>
   );
 };
-
 
 

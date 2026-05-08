@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\FormType;
-use App\Models\FormCategory;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -12,24 +11,14 @@ class FormTypeController extends Controller
 {
     public function index()
     {
-        $categories = FormCategory::where('is_active', true)->get();
-        return view('dashboard.form-types.index', compact('categories'));
+        return view('dashboard.form-types.index');
     }
 
     public function datatable(Request $request)
     {
-        $query = FormType::with('category')->select('form_types.*');
-
-        if ($request->filled('category_id')) {
-            $query->where('form_category_id', $request->category_id);
-        }
+        $query = FormType::select('form_types.*');
 
         return DataTables::of($query)
-            ->addColumn('category', fn($row) =>
-                $row->category
-                    ? '<span class="badge bg-secondary">' . e($row->category->name) . '</span>'
-                    : '-'
-            )
             ->addColumn('is_active', fn($row) => '
                 <div class="form-check form-switch d-flex justify-content-center">
                     <input
@@ -55,14 +44,13 @@ class FormTypeController extends Controller
                     </button>
                 </form>
             ')
-            ->rawColumns(['category', 'is_active', 'actions'])
+            ->rawColumns(['is_active', 'actions'])
             ->make(true);
     }
 
     public function create()
     {
-        $categories = FormCategory::where('is_active', true)->orderBy('name')->get();
-        return view('dashboard.form-types.create', compact('categories'));
+        return view('dashboard.form-types.create');
     }
 
     public function store(Request $request)
@@ -78,14 +66,13 @@ class FormTypeController extends Controller
 
     public function show(FormType $formType)
     {
-        $formType->load(['category', 'forms']);
+        $formType->load('forms');
         return view('dashboard.form-types.show', compact('formType'));
     }
 
     public function edit(FormType $formType)
     {
-        $categories = FormCategory::where('is_active', true)->orderBy('name')->get();
-        return view('dashboard.form-types.edit', compact('formType', 'categories'));
+        return view('dashboard.form-types.edit', compact('formType'));
     }
 
     public function update(Request $request, FormType $formType)

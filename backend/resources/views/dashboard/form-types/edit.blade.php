@@ -29,25 +29,6 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">
-                            Category <span class="text-danger">*</span>
-                        </label>
-                        <select name="form_category_id"
-                            class="form-select @error('form_category_id') is-invalid @enderror">
-                            <option value="">Select a category...</option>
-                            @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}"
-                                    {{ old('form_category_id', $formType->form_category_id) == $cat->id ? 'selected' : '' }}>
-                                    {{ $cat->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('form_category_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
                             Name <span class="text-danger">*</span>
                         </label>
                         <input type="text" name="name"

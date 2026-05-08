@@ -10,6 +10,8 @@ const TextProperties: React.FC<Props> = ({ field, updateField }) => {
   const rules = field.validation_rules || {};
 
   const updateRule = (key: string, value: any) => {
+    if (!field.id) return;
+
     updateField(field.id, {
       validation_rules: { ...rules, [key]: value }
     });
@@ -60,4 +62,3 @@ const TextProperties: React.FC<Props> = ({ field, updateField }) => {
 };
 
 export default TextProperties;
-

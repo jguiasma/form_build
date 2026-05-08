@@ -9,7 +9,9 @@ import { EmailValidationForm } from "../features/auth/components/EmailValidation
 import CompleteProfile from "../features/profile/pages/CompleteProfile";
 import Dashboard from "../features/dashboard/pages/Dashboard";
 import VisualEditor from "../features/form-editor/pages/VisualEditor";
+import CreateFormPage from "../features/form-editor/pages/CreateFormPage";
 import PublicForm from "../features/public-form/pages/PublicForm";
+import CategoriesPage from "../features/categories/pages/CategoriesPage";
 import "../styles/index.css";
 
 
@@ -27,6 +29,8 @@ function App() {
           <Route path="/pricing" element={<PricingPage />} />
           
           <Route path="/solutions" element={<SolutionsPage />} />
+
+          <Route path="/categories" element={<CategoriesPage />} />
           
           {/* Auth Flow */}
           <Route path="/auth" element={<EmailValidationForm />} />
@@ -35,6 +39,7 @@ function App() {
           <Route path="/complete-profile" element={<CompleteProfile />} />
           
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/forms/create" element={<CreateFormPage />} />
           <Route path="/editor" element={<VisualEditor />} />
           <Route path="/editor/:id" element={<VisualEditor />} />
           

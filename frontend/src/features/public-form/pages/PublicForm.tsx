@@ -123,6 +123,28 @@ const PublicForm: React.FC = () => {
   const handleSubmit = async () => {
     if (!responseId) return;
 
+    const allFields = steps.flatMap((step) => step.fields);
+    const result = validatePublicFormStep(allFields, formValues);
+    if (!result.isValid) {
+      setErrors(result.errors);
+
+      const firstErrorId = Object.keys(result.errors)[0];
+      const errorStepIndex = steps.findIndex((step) =>
+        step.fields.some((field) => String(field.id) === firstErrorId)
+      );
+
+      if (errorStepIndex !== -1) {
+        setCurrentStepIndex(errorStepIndex);
+        setTimeout(() => {
+          document
+            .getElementById(`field-${firstErrorId}`)
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 0);
+      }
+
+      return;
+    }
+
     setSubmitting(true);
     try {
       const payload: SubmitFormPayload = { response_id: responseId };
@@ -269,7 +291,9 @@ const PublicForm: React.FC = () => {
                           submitting={submitting}
                           onChange={handleInputChange}
                           onToggleChoice={toggleChoice}
-                          onSubmit={handleSubmit}
+                          onSubmit={() => {
+                            void handleNext();
+                          }}
                         />
                       </div>
                     ))}
@@ -319,7 +343,7 @@ const PublicForm: React.FC = () => {
                 Powered by
               </span>
               <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                FormFlow AI
+                FormFlow
               </span>
             </div>
           </footer>

@@ -76,4 +76,3 @@ const DateProperties: React.FC<Props> = ({ field, updateField }) => {
 };
 
 export default DateProperties;
-

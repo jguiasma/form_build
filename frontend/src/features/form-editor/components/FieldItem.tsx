@@ -4,6 +4,7 @@ import { ItemTypes } from '../lib/dndConfig';
 import { useFormEditorStore } from '../store/useFormEditorStore';
 import type { FormField } from '../types/form-builder.types';
 import { MoreVertical, Settings, Trash2 } from 'lucide-react';
+import { getConditionalLabels, getMatrixColumns, getMatrixRows, getSliderConfig } from '../lib/fieldConfig';
 
 interface FieldItemProps {
   field: FormField;
@@ -53,7 +54,7 @@ const FieldItem: React.FC<FieldItemProps> = ({ field }) => {
         return <textarea placeholder={field.placeholder || ''} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none bg-slate-50/50 h-24" readOnly />;
       case 'select':
         return (
-          <select className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none bg-slate-50/50 text-slate-400" readOnly>
+          <select className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none bg-slate-50/50 text-slate-400" disabled>
             {field.validation_rules?.allow_empty && <option></option>}
             {field.options && field.options.length > 0 ? (
               field.options.map(opt => <option key={opt.id} value={opt.value}>{opt.label}</option>)
@@ -91,26 +92,154 @@ const FieldItem: React.FC<FieldItemProps> = ({ field }) => {
             readOnly 
           />
         );
-      case 'grouped':
+      case 'slider': {
+        const config = getSliderConfig(field.validation_rules?.slider_config);
+        const { min, max, step, unit, showValue } = config;
+        const defaultValue = Number(field.default_value ?? min);
+        const currentValue = Math.min(Math.max(defaultValue, min), max);
+
         return (
           <div className="space-y-3">
-            {/* Rue */}
-            <input type="text" placeholder="Rue" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50/50" readOnly />
-            {/* Ville + Code postal */}
-            <div className="grid grid-cols-2 gap-3">
-              <input type="text" placeholder="Ville" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50/50" readOnly />
-              <input type="text" placeholder="Code postal" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50/50" readOnly />
+            <input
+              type="range"
+              min={min}
+              max={max}
+              step={step}
+              value={currentValue}
+              className="w-full accent-[#1148ad]"
+              disabled
+            />
+            <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <span>{min}{unit}</span>
+              {showValue && <span className="text-[#1148ad]">{currentValue}{unit}</span>}
+              <span>{max}{unit}</span>
             </div>
           </div>
         );
+      }
+      case 'matrix': {
+        const config = field.validation_rules?.matrix_config || {};
+        const rows = getMatrixRows(config);
+        const columns = getMatrixColumns(config);
+        const display = config.display || "radio";
+
+        return (
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div className="grid bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest" style={{ gridTemplateColumns: `1.2fr repeat(${columns.length}, minmax(0, 1fr))` }}>
+              <div className="p-3" />
+              {columns.map((column: string, index: number) => (
+                <div key={index} className="p-3 text-center truncate">{column}</div>
+              ))}
+            </div>
+            {rows.map((row: string, rowIndex: number) => (
+              <div key={rowIndex} className="grid border-t border-slate-100" style={{ gridTemplateColumns: `1.2fr repeat(${columns.length}, minmax(0, 1fr))` }}>
+                <div className="p-3 text-xs font-bold text-slate-600 truncate">{row}</div>
+                {columns.map((_: string, colIndex: number) => (
+                  <div key={colIndex} className="p-3 flex justify-center">
+                    {display === "slider" ? (
+                      <span className="h-1.5 w-full rounded-full bg-slate-200" />
+                    ) : (
+                      <span className="size-4 rounded-full border-2 border-slate-300 bg-slate-50" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        );
+      }
+      case 'conditional': {
+        const { conditionLabel, actionLabel } = getConditionalLabels(field.validation_rules?.conditional_config);
+
+        return (
+          <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-3">
+            <div className="flex items-center gap-2 text-[#1148ad]">
+              <span className="material-symbols-outlined text-lg">account_tree</span>
+              <span className="text-xs font-black uppercase tracking-widest">{conditionLabel}</span>
+            </div>
+            <div className="rounded-lg border border-dashed border-blue-200 bg-white p-3 text-xs font-bold text-slate-500">
+              {actionLabel}
+            </div>
+          </div>
+        );
+      }
+      case 'grouped': {
+        const config = field.validation_rules?.grouped_config;
+
+        if (!config || !config.rows) {
+          return (
+            <div className="space-y-3">
+              <input type="text" placeholder="Field 1" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50/50" readOnly />
+              <div className="grid grid-cols-2 gap-3">
+                <input type="text" placeholder="Field 2" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50/50" readOnly />
+                <input type="text" placeholder="Field 3" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50/50" readOnly />
+              </div>
+            </div>
+          );
+        }
+
+        const rows = config.rows as Record<string, {
+          num_cols: number;
+          cols: Record<string, { type: string; label?: string; placeholder?: string }>;
+        }>;
+
+        return (
+          <div className="space-y-3">
+            {Object.entries(rows).map(([rowKey, row]) => {
+              const cols = row.cols ? Object.values(row.cols) : [];
+              const numCols = Math.max(cols.length, 1);
+
+              return (
+                <div
+                  key={rowKey}
+                  className="grid gap-3"
+                  style={{ gridTemplateColumns: `repeat(${numCols}, minmax(0, 1fr))` }}
+                >
+                  {cols.map((col, colIndex) => {
+                    const inputClass = "w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50/50";
+
+                    return (
+                      <div key={colIndex}>
+                        {col.label && (
+                          <label className="block text-xs font-semibold text-slate-500 mb-1">
+                            {col.label}
+                          </label>
+                        )}
+                        {col.type === 'textarea' ? (
+                          <textarea
+                            placeholder={col.placeholder || ''}
+                            className={`${inputClass} h-20`}
+                            readOnly
+                          />
+                        ) : col.type === 'select' ? (
+                          <select className={inputClass} disabled>
+                            <option>{col.placeholder || 'Select...'}</option>
+                          </select>
+                        ) : (
+                          <input
+                            type={col.type || 'text'}
+                            placeholder={col.placeholder || ''}
+                            className={inputClass}
+                            readOnly
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        );
+      }
       default:
         return <input type="text" placeholder={field.placeholder || ''} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none bg-slate-50/50" readOnly />;
     }
   };
 
-  const [{ isOver, canDrop, dropPos }, drop] = useDrop({
+  const [{ isOver }, drop] = useDrop({
     accept: [ItemTypes.PALETTE_ITEM, ItemTypes.FIELD_ITEM],
-    hover: (item: any, monitor) => {
+    hover: (_item: any, monitor) => {
       if (!ref.current) return;
       
       const hoverBoundingRect = ref.current?.getBoundingClientRect();
@@ -153,18 +282,22 @@ const FieldItem: React.FC<FieldItemProps> = ({ field }) => {
       if (!localDropPos) return;
 
       if (item.isPaletteItem) {
+        const fieldTemplate = {
+          validation_rules: item.validation_rules,
+          options: item.options,
+        };
+
         if (localDropPos === 'left' || localDropPos === 'right') {
-           addField(useFormEditorStore.getState().activeStepId!, item.type, 'SAME_ROW', field.id, localDropPos);
+           addField(useFormEditorStore.getState().activeStepId!, item.type, 'SAME_ROW', field.id!, localDropPos, fieldTemplate);
         } else {
-           addField(useFormEditorStore.getState().activeStepId!, item.type, 'NEW_ROW', field.id, localDropPos);
+           addField(useFormEditorStore.getState().activeStepId!, item.type, 'NEW_ROW', field.id!, localDropPos, fieldTemplate);
         }
       } else {
-        moveField(item.id, field.id, localDropPos);
+        moveField(item.id, field.id!, localDropPos);
       }
     },
     collect: (monitor) => ({
       isOver: monitor.isOver({ shallow: true }),
-      canDrop: monitor.canDrop(),
     })
   });
 
@@ -253,4 +386,3 @@ const FieldItem: React.FC<FieldItemProps> = ({ field }) => {
 };
 
 export default FieldItem;
-

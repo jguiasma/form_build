@@ -101,4 +101,3 @@ const FileProperties: React.FC<Props> = ({ field, updateField }) => {
 };
 
 export default FileProperties;
-

@@ -1,3 +1,69 @@
+const parseAnswerValue = (value: any) => {
+  if (typeof value !== "string") return value;
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
+const formatEmptyValue = (value: any) => {
+  if (value === "" || value === null || value === undefined) return "--";
+  return String(value);
+};
+
+const renderGroupedAnswer = (answer: any, value: Record<string, any>) => {
+  const rows = answer.field?.validation_rules?.grouped_config?.rows;
+
+  if (!rows) {
+    return (
+      <pre className="text-xs font-mono text-indigo-600 leading-relaxed whitespace-pre-wrap">
+        {JSON.stringify(value, null, 2)}
+      </pre>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {Object.entries(rows).flatMap(([rowKey, row]: any) =>
+        Object.entries(row.cols || {}).map(([colKey, col]: any) => {
+          const valueKey = `${rowKey}_${colKey}`;
+
+          return (
+            <div key={valueKey} className="rounded-2xl bg-white border border-slate-100 p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
+                {col.label || col.placeholder || valueKey}
+              </p>
+              <p className="text-sm font-black text-slate-800">
+                {formatEmptyValue(value[valueKey])}
+              </p>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+};
+
+const renderAnswerValue = (answer: any) => {
+  const value = parseAnswerValue(answer.value);
+
+  if (answer.field?.type === "grouped" && value && typeof value === "object") {
+    return renderGroupedAnswer(answer, value);
+  }
+
+  if (value && typeof value === "object") {
+    return (
+      <pre className="text-xs font-mono text-indigo-600 leading-relaxed whitespace-pre-wrap">
+        {JSON.stringify(value, null, 2)}
+      </pre>
+    );
+  }
+
+  return formatEmptyValue(value);
+};
+
 export const ResponseDetailsView = ({ response, onBack }: { response: any; onBack: () => void }) => {
   if (!response) return null;
 
@@ -90,11 +156,7 @@ export const ResponseDetailsView = ({ response, onBack }: { response: any; onBac
                        </p>
                     </div>
                     <div className="text-sm font-bold text-slate-800 bg-slate-50/50 p-6 rounded-3xl border border-slate-100 group-hover/ans:border-indigo-100 group-hover/ans:bg-white transition-all shadow-sm group-hover/ans:shadow-md">
-                      {typeof ans.value === 'object' ? (
-                        <pre className="text-xs font-mono text-indigo-600 leading-relaxed whitespace-pre-wrap">
-                          {JSON.stringify(ans.value, null, 2)}
-                        </pre>
-                      ) : (ans.value || "—")}
+                      {renderAnswerValue(ans)}
                     </div>
                   </div>
                ))}
@@ -180,4 +242,3 @@ export const ResponseDetailsView = ({ response, onBack }: { response: any; onBac
     </div>
   );
 };
-

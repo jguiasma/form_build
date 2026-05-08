@@ -60,7 +60,7 @@ class ValidationRuleGenerator
 
             // ── DATE ───────────────────────────────────────────────
             case 'date':
-                $rules[] = 'date';
+                $rules[] = 'date_format:Y-m-d';
                 if (!empty($vr['min_date'])) $rules[] = 'after_or_equal:' . $vr['min_date'];
                 if (!empty($vr['max_date'])) $rules[] = 'before_or_equal:' . $vr['max_date'];
                 break;
@@ -195,6 +195,48 @@ class ValidationRuleGenerator
 
         //  SPECIAL CASE: grouped
         if ($field->type === 'grouped') {
+            $rows = $field->validation_rules['grouped_config']['rows'] ?? [];
+
+            if (!empty($rows)) {
+                $validationRules[$field->field_key] = [
+                    $field->is_required ? 'required' : 'nullable',
+                    'array',
+                ];
+
+                foreach ($rows as $rowKey => $row) {
+                    foreach (($row['cols'] ?? []) as $colKey => $col) {
+                        $nestedKey = $field->field_key . '.' . $rowKey . '_' . $colKey;
+                        $rules = [$field->is_required ? 'required' : 'nullable'];
+
+                        switch ($col['type'] ?? 'text') {
+                            case 'email':
+                                $rules[] = 'email:rfc,dns';
+                                break;
+                            case 'phone':
+                                $rules[] = 'regex:/^\+?[\d\s().-]{7,20}$/';
+                                break;
+                            case 'url':
+                                $rules[] = 'url';
+                                break;
+                            case 'number':
+                                $rules[] = 'numeric';
+                                break;
+                            case 'date':
+                                $rules[] = 'date_format:Y-m-d';
+                                break;
+                            case 'select':
+                                $rules[] = 'string';
+                                break;
+                            default:
+                                $rules[] = 'string';
+                        }
+
+                        $validationRules[$nestedKey] = $rules;
+                    }
+                }
+
+                continue;
+            }
 
             foreach (request()->all() as $key => $value) {
 
@@ -206,6 +248,9 @@ class ValidationRuleGenerator
                     // email intelligent
                     if (str_contains(strtolower($key), 'email')) {
                         $validationRules[$key] = ['required', 'email'];
+                    }
+                    if (str_contains(strtolower($key), 'phone')) {
+                        $validationRules[$key] = ['required', 'regex:/^\+?[\d\s().-]{7,20}$/'];
                     }
                 }
             }

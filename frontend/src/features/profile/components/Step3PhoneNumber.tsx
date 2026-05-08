@@ -58,4 +58,3 @@ export const Step3PhoneNumber: React.FC<Step3Props> = ({ value, onChange, onNext
     </div>
   );
 };
-

@@ -231,4 +231,3 @@ const OptionsManager: React.FC<OptionsManagerProps> = ({ fieldId }) => {
 };
 
 export default OptionsManager;
-

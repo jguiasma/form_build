@@ -7,7 +7,7 @@ interface Props {
   updateField: (id: string | number, updates: Partial<FormField>) => void;
 }
 
-const EmailProperties: React.FC<Props> = ({ field, updateField }) => {
+const EmailProperties: React.FC<Props> = () => {
   return (
     <div className="space-y-4">
       <div className="p-4 bg-violet-50 border border-violet-100 rounded-2xl space-y-3">
@@ -28,4 +28,3 @@ const EmailProperties: React.FC<Props> = ({ field, updateField }) => {
 };
 
 export default EmailProperties;
-

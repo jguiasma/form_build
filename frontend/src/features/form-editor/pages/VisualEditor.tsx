@@ -18,7 +18,7 @@ const VisualEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   
   const [showPreview, setShowPreview] = React.useState(false);
-  const { data: formData, isLoading } = useGetForm(id || '');
+  const { data: formData, isLoading, isError, error } = useGetForm(id || '');
   const updateMutation = useUpdateFormSchema(id || '');
   const publishMutation = usePublishForm(id || '');
 
@@ -86,6 +86,25 @@ const VisualEditor: React.FC = () => {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [updateMutation.isPending]);
+
+  if (isError) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-[#f8fbfe] p-6 text-center">
+        <p className="text-sm font-black text-rose-500 uppercase tracking-widest mb-3">
+          Failed to initialize editor
+        </p>
+        <p className="text-sm text-slate-500 max-w-md">
+          {(error as any)?.response?.data?.message || (error as Error)?.message || "The form could not be loaded."}
+        </p>
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="mt-6 px-5 py-3 bg-[#1148ad] text-white rounded-xl text-sm font-bold"
+        >
+          Back to dashboard
+        </button>
+      </div>
+    );
+  }
 
   if (isLoading || !schema.id) return (
      <div className="flex flex-col justify-center items-center h-screen bg-[#f8fbfe]">
@@ -262,5 +281,3 @@ const VisualEditor: React.FC = () => {
 };
 
 export default VisualEditor;
-
-

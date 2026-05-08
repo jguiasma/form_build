@@ -8,7 +8,7 @@ import type {
 
 export const publicFormApi = {
   getPublicForm: async (uuid: string): Promise<PublicFormSchema> => {
-    const { data } = await api.get(`/forms/public/${uuid}`);
+    const { data } = await api.get(`/forms/${uuid}`);
     return data.data;
   },
 

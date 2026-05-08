@@ -47,4 +47,3 @@ export const Step1Name: React.FC<Step1Props> = ({ value, onChange, onNext, isPen
     </div>
   );
 };
-

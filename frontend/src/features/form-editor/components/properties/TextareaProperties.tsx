@@ -69,4 +69,3 @@ const TextareaProperties: React.FC<Props> = ({ field, updateField }) => {
 };
 
 export default TextareaProperties;
-

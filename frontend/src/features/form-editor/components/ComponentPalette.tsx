@@ -4,9 +4,11 @@ import { ItemTypes } from '../lib/dndConfig';
 import { 
   Type, Mail, AlignLeft, CheckSquare, Phone, Menu, 
   Calendar, CheckCircle, MapPin, Link as LinkIcon, Star, Minus,
-  CreditCard, Mic, UploadCloud, PenTool, Octagon
+  CreditCard, Mic, UploadCloud, PenTool, Octagon, SlidersHorizontal,
+  Table2, GitBranch
 } from "lucide-react";
 import { usePalette } from '../hooks/usePalette';
+import { useFormEditorStore } from '../store/useFormEditorStore';
 
 // Mapping field types to icons - extensible
 export const iconMap: Record<string, React.ElementType> = {
@@ -27,6 +29,9 @@ export const iconMap: Record<string, React.ElementType> = {
   file: UploadCloud,
   signature: PenTool,
   grouped: MapPin,
+  slider: SlidersHorizontal,
+  matrix: Table2,
+  conditional: GitBranch,
 };
 
 
@@ -35,14 +40,16 @@ interface PaletteItemProps {
   label: string;
   icon?: string;
   isPro?: boolean;
+  validationRules?: any;
+  options?: any[];
 }
 
-const PaletteItem: React.FC<PaletteItemProps> = ({ type, label, icon, isPro }) => {
+const PaletteItem: React.FC<PaletteItemProps> = ({ type, label, icon, isPro, validationRules, options }) => {
   const Icon = icon && iconMap[icon] ? iconMap[icon] : (iconMap[type] || Type);
 
   const [{ isDragging }, drag] = useDrag(() => ({
     type: ItemTypes.PALETTE_ITEM,
-    item: { type, isPaletteItem: true },
+    item: { type, isPaletteItem: true, validation_rules: validationRules, options },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
@@ -65,7 +72,8 @@ const PaletteItem: React.FC<PaletteItemProps> = ({ type, label, icon, isPro }) =
 };
 
 const ComponentPalette: React.FC = () => {
-  const { data: palette, isLoading } = usePalette();
+  const { schema } = useFormEditorStore();
+  const { data: palette, isLoading } = usePalette(schema.form_category_id);
 
   const groupedPalette = (palette || []).reduce((acc: any, field: any) => {
     const cat = field.category || 'Other';
@@ -110,6 +118,8 @@ const ComponentPalette: React.FC = () => {
                       type={field.type} 
                       label={field.label} 
                       icon={field.icon}
+                      validationRules={field.validation_rules}
+                      options={field.options}
                     />
                   ))}
                 </div>
@@ -123,4 +133,3 @@ const ComponentPalette: React.FC = () => {
 };
 
 export default ComponentPalette;
-

@@ -29,6 +29,7 @@ class Form extends Model
     {
         return [
             'form_category_id' => ['required', 'exists:form_categories,id'],
+            'form_type_id' => ['required', 'exists:form_types,id'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status' => ['sometimes', 'in:draft,published,archived'],

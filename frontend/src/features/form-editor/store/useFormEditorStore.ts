@@ -16,7 +16,7 @@ interface FormEditorState {
   reorderSteps: (startIndex: number, endIndex: number) => void;
   setActiveStep: (stepId: string | number | null) => void;
   updateStep: (stepId: string | number, updates: Partial<FormStep>) => void;
-  addField: (stepId: string | number, type: string, dropMode?: 'NEW_ROW' | 'SAME_ROW', targetFieldId?: string | number | null, position?: 'top' | 'bottom' | 'left' | 'right') => void;
+  addField: (stepId: string | number, type: string, dropMode?: 'NEW_ROW' | 'SAME_ROW', targetFieldId?: string | number | null, position?: 'top' | 'bottom' | 'left' | 'right', fieldTemplate?: Partial<FormField>) => void;
   removeField: (fieldId: string | number) => void;
   updateField: (fieldId: string | number, updates: Partial<FormField>) => void;
   setSelectedField: (fieldId: string | number | null) => void;
@@ -24,6 +24,22 @@ interface FormEditorState {
 }
 
 const generateId = () => `temp_${Math.random().toString(36).substring(2, 9)}`;
+
+const getDefaultValidationRules = (type: string) => {
+  if (type === 'slider') {
+    return { slider_config: { min: 0, max: 100, step: 1 } };
+  }
+
+  if (type === 'matrix') {
+    return { matrix_config: { rows: ['Row 1', 'Row 2'], columns: ['Option 1', 'Option 2', 'Option 3'] } };
+  }
+
+  if (type === 'conditional') {
+    return { conditional_config: { condition_label: 'Conditional block', action_label: 'Shown when condition matches' } };
+  }
+
+  return undefined;
+};
 
 export const useFormEditorStore = create<FormEditorState>()(
   persist(
@@ -120,7 +136,8 @@ export const useFormEditorStore = create<FormEditorState>()(
          type,
           dropMode = 'NEW_ROW',
            targetFieldId = null, 
-           position = 'bottom') =>
+           position = 'bottom',
+           fieldTemplate = {}) =>
              set((state) => {
         const stepIndex = state.schema.steps.findIndex(s => s.id === stepId);
         if (stepIndex === -1) return state;
@@ -146,11 +163,11 @@ export const useFormEditorStore = create<FormEditorState>()(
             const targetField = step.fields.find(f => f.id === targetFieldId);
             if (targetField) {
               newFieldOrder = targetField.field_order;
-              const sameRowFields = step.fields.filter(f => f.field_order === targetField.field_order);
-              newColumnIndex = position === 'left' ? targetField.column_index : targetField.column_index + 1;
+              const targetColumnIndex = targetField.column_index || 1;
+              newColumnIndex = position === 'left' ? targetColumnIndex : targetColumnIndex + 1;
               // Shift columns in the same row
-              fields = fields.map(f => (f.field_order === newFieldOrder && f.column_index >= newColumnIndex) 
-                ? { ...f, column_index: f.column_index + 1 } 
+              fields = fields.map(f => (f.field_order === newFieldOrder && (f.column_index || 1) >= newColumnIndex) 
+                ? { ...f, column_index: (f.column_index || 1) + 1 } 
                 : f
               );
             }
@@ -159,13 +176,19 @@ export const useFormEditorStore = create<FormEditorState>()(
 
         const newField: FormField = {
           id: generateId(),
-          label: `New ${_.startCase(type)}`,
-          field_key: `${type}_${Date.now()}`,
+          label: fieldTemplate.label || `New ${_.startCase(type)}`,
+          field_key: fieldTemplate.field_key || `${type}_${Date.now()}`,
           type,
-          is_required: false,
+          placeholder: fieldTemplate.placeholder,
+          default_value: fieldTemplate.default_value,
+          description: fieldTemplate.description,
+          custom_error_message: fieldTemplate.custom_error_message,
+          is_required: fieldTemplate.is_required ?? false,
+          validation_rules: fieldTemplate.validation_rules || getDefaultValidationRules(type),
           field_order: newFieldOrder,
           column_index: newColumnIndex,
-          column_span: 1
+          column_span: fieldTemplate.column_span || 1,
+          options: fieldTemplate.options,
         };
 
         const newSteps = [...state.schema.steps];
@@ -240,8 +263,9 @@ export const useFormEditorStore = create<FormEditorState>()(
                return { ...step, fields: shifted };
             } else {
                const targetIndex = filteredFields.findIndex(f => f.id === overId);
-               const newColumnIndex = position === 'left' ? targetField.column_index : targetField.column_index + 1;
-               const shifted = filteredFields.map(f => (f.field_order === targetField.field_order && f.column_index >= newColumnIndex) ? { ...f, column_index: f.column_index + 1 } : f);
+               const targetColumnIndex = targetField.column_index || 1;
+               const newColumnIndex = position === 'left' ? targetColumnIndex : targetColumnIndex + 1;
+               const shifted = filteredFields.map(f => (f.field_order === targetField.field_order && (f.column_index || 1) >= newColumnIndex) ? { ...f, column_index: (f.column_index || 1) + 1 } : f);
                shifted.splice(targetIndex + (position === 'right' ? 1 : 0), 0, { 
                  ...sourceField, 
                  field_order: targetField.field_order, 

@@ -57,4 +57,3 @@ export const useProfileProgress = () => {
     completeRegistrationMutation,
   };
 };
-

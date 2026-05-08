@@ -4,7 +4,8 @@ import type { FieldOption, FormSchema, FormType } from "../types/form-builder.ty
 export type CreateFormPayload = {
   title: string;
   description?: string;
-  form_type_id?: number | string;
+  form_type_id: number | string;
+  form_category_id: number | string;
 };
 
 export type FormsQueryParams = {
@@ -23,23 +24,23 @@ export type FormsListResponse = {
 
 export const formApi = {
   getFieldTypes: async (): Promise<FormType[]> => {
-    const { data } = await api.get("/admin/form-types");
-    return data.data.data;
+    const { data } = await api.get("/form-types");
+    return data;
   },
 
   getForm: async (id: string | number): Promise<FormSchema> => {
     const { data } = await api.get(`/admin/forms/${id}`);
-    return data.data;
+    return data.data ?? data;
   },
 
   createForm: async (formData: CreateFormPayload): Promise<FormSchema> => {
     const { data } = await api.post("/admin/forms", formData);
-    return data.data;
+    return data.data ?? data;
   },
 
   updateFormSchema: async (id: string | number, schema: FormSchema): Promise<FormSchema> => {
     const { data } = await api.put(`/admin/forms/${id}`, schema);
-    return data.data;
+    return data.data ?? data;
   },
 
   updateStep: async (
@@ -62,17 +63,19 @@ export const formApi = {
 
   getForms: async (params: FormsQueryParams = {}): Promise<FormsListResponse> => {
     const { data } = await api.get("/admin/forms", { params });
+    const paginator = data.data?.data ? data.data : data;
+
     return {
-      data: data.data.data,
-      total: data.data.total,
-      current_page: data.data.current_page,
-      last_page: data.data.last_page,
+      data: paginator.data ?? [],
+      total: paginator.total ?? 0,
+      current_page: paginator.current_page ?? 1,
+      last_page: paginator.last_page ?? 1,
     };
   },
 
   getFormResponses: async (formId: number | string): Promise<any[]> => {
     const { data } = await api.get(`/admin/forms/${formId}/responses`);
-    return data.data;
+    return data.data?.data ?? data.data ?? data;
   },
 
   deleteForm: async (id: string | number) => {
@@ -90,9 +93,19 @@ export const formApi = {
     return data.data;
   },
 
-  getPalette: async (): Promise<any[]> => {
-    const { data } = await api.get("/admin/palette");
-    return data;
+  getPalette: async (categoryId?: number | string): Promise<any[]> => {
+    const { data } = await api.get("/form-fields/palette", {
+      params: categoryId ? { category_id: categoryId } : undefined,
+    });
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    return Object.entries(data || {}).flatMap(([category, fields]) =>
+      Array.isArray(fields)
+        ? fields.map((field) => ({ ...field, category }))
+        : []
+    );
   },
 };
 

@@ -37,12 +37,14 @@ export interface FormStep {
 export interface FormVersion {
   id: number | string;
   version: string;
+  share_link?: string | null;
   created_at: string;
 }
 
 export interface FormSchema {
   id?: number | string;
   uuid?: string;
+  form_category_id?: number | string;
   form_type_id?: number | string;
   title: string;
   description?: string | null;

@@ -5,6 +5,7 @@ import { CompareFeatures } from "../components/CompareFeatures";
 import { Packs } from "../components/Packs";
 import { PremiumFeatures } from "../components/PremiumFeatures";
 
+
 export default function PricingPage() {
   return (
     <div className="min-h-screen bg-white selection:bg-blue-100 selection:text-blue-900">
@@ -19,4 +20,3 @@ export default function PricingPage() {
     </div>
   );
 }
-

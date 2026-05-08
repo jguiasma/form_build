@@ -80,4 +80,3 @@ const SubmitProperties: React.FC<Props> = ({ field, updateField }) => {
 };
 
 export default SubmitProperties;
-

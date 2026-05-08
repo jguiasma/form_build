@@ -21,6 +21,10 @@
 
     "user.created": "Utilisateur créé avec succès.",
     "user.updated": "Utilisateur mis à jour avec succès.",
-    "user.deleted": "Utilisateur supprimé avec succès."
+    "user.deleted": "Utilisateur supprimé avec succès.",
+
+    "form_type.created": "Type de formulaire créé avec succès.",
+    "form_type.updated": "Type de formulaire mis à jour avec succès.",
+    "form_type.deleted": "Type de formulaire supprimé avec succès."
 
 }

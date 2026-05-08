@@ -1,6 +1,6 @@
 import React from 'react';
 import { useFormEditorStore } from '../store/useFormEditorStore';
-import { Settings, Mail, Type, Hash, Calendar, List, CircleDot, CheckSquare, FileUp, Send, AlignLeft } from 'lucide-react';
+import { Settings, Mail, Type, Hash, Calendar, List, CircleDot, CheckSquare, FileUp, Send, AlignLeft, SlidersHorizontal, Table2, GitBranch } from 'lucide-react';
 import EmailProperties from './properties/EmailProperties';
 import TextProperties from './properties/TextProperties';
 import TextareaProperties from './properties/TextareaProperties';
@@ -9,6 +9,7 @@ import DateProperties from './properties/DateProperties';
 import FileProperties from './properties/FileProperties';
 import SubmitProperties from './properties/SubmitProperties';
 import OptionsManager from './properties/OptionsManager';
+import { getConditionalLabels, getMatrixColumns, getMatrixRows, getSliderConfig } from '../lib/fieldConfig';
 
 const TYPE_META: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
   text:     { icon: <Type className="w-4 h-4" />,        color: 'bg-sky-500',     label: 'Text Input' },
@@ -21,6 +22,9 @@ const TYPE_META: Record<string, { icon: React.ReactNode; color: string; label: s
   checkbox: { icon: <CheckSquare className="w-4 h-4" />, color: 'bg-orange-500',  label: 'Checkbox Group' },
   file:     { icon: <FileUp className="w-4 h-4" />,      color: 'bg-cyan-500',    label: 'File Upload' },
   submit:   { icon: <Send className="w-4 h-4" />,        color: 'bg-rose-500',    label: 'Submit Button' },
+  slider:   { icon: <SlidersHorizontal className="w-4 h-4" />, color: 'bg-blue-500', label: 'Slider' },
+  matrix:   { icon: <Table2 className="w-4 h-4" />,      color: 'bg-purple-500',  label: 'Matrix' },
+  conditional: { icon: <GitBranch className="w-4 h-4" />, color: 'bg-lime-600', label: 'Conditional' },
 };
 
 const PropertiesPanel: React.FC = () => {
@@ -63,6 +67,142 @@ const PropertiesPanel: React.FC = () => {
         return <FileProperties field={field} updateField={updateField} />;
       case 'submit':
         return <SubmitProperties field={field} updateField={updateField} />;
+      case 'slider': {
+        const config = field.validation_rules?.slider_config || {};
+        const sliderConfig = getSliderConfig(config);
+        const updateSliderConfig = (updates: Record<string, any>) => updateField(field.id!, {
+          validation_rules: {
+            ...(field.validation_rules || {}),
+            slider_config: { ...config, ...updates },
+          },
+        });
+
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Mode</label>
+              <select value={sliderConfig.mode} onChange={(e) => updateSliderConfig({ mode: e.target.value })} className="w-full px-3 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold">
+                <option value="single">Single value</option>
+                <option value="range">Range</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Min</label>
+                <input type="number" value={sliderConfig.min} onChange={(e) => updateSliderConfig({ min: Number(e.target.value) })} className="w-full px-3 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold" />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Max</label>
+                <input type="number" value={sliderConfig.max} onChange={(e) => updateSliderConfig({ max: Number(e.target.value) })} className="w-full px-3 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold" />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Step</label>
+                <input type="number" value={sliderConfig.step} onChange={(e) => updateSliderConfig({ step: Number(e.target.value) })} className="w-full px-3 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold" />
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Unit</label>
+              <input value={sliderConfig.unit} onChange={(e) => updateSliderConfig({ unit: e.target.value })} placeholder="%, km, EUR..." className="w-full px-3 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold" />
+            </div>
+            <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl">
+              <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight">Show Current Value</span>
+              <input type="checkbox" checked={sliderConfig.showValue} onChange={(e) => updateSliderConfig({ show_value: e.target.checked })} className="w-5 h-5 text-[#1148ad] rounded-lg border-slate-300 focus:ring-[#1148ad] cursor-pointer" />
+            </div>
+          </div>
+        );
+      }
+      case 'matrix': {
+        const config = field.validation_rules?.matrix_config || {};
+        const rows = getMatrixRows(config).join("\n");
+        const columnsPreview = getMatrixColumns(config).join(", ");
+        const updateMatrixConfig = (updates: Record<string, any>) => updateField(field.id!, {
+          validation_rules: {
+            ...(field.validation_rules || {}),
+            matrix_config: { ...config, ...updates },
+          },
+        });
+
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Scale Type</label>
+              <select value={config.scale_type || "numeric"} onChange={(e) => updateMatrixConfig({ scale_type: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold">
+                <option value="numeric">Numeric 1-5</option>
+                <option value="numeric10">Numeric 1-10</option>
+                <option value="stars">Stars</option>
+                <option value="emoji">Emoji</option>
+                <option value="text">Text labels</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Display</label>
+              <select value={config.display || "radio"} onChange={(e) => updateMatrixConfig({ display: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold">
+                <option value="radio">Radio buttons per row</option>
+                <option value="slider">Slider per row</option>
+              </select>
+            </div>
+            {config.scale_type === "text" && (
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Column Labels</label>
+                <input value={config.text_labels || ""} onChange={(e) => updateMatrixConfig({ text_labels: e.target.value })} placeholder="Bad, Average, Good" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold" />
+              </div>
+            )}
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Rows</label>
+              <textarea value={rows} onChange={(e) => updateMatrixConfig({ rows: e.target.value.split("\n").map(v => v.trim()).filter(Boolean) })} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold min-h-[90px]" />
+            </div>
+            <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Resolved Columns</p>
+              <p className="text-xs font-bold text-slate-600">{columnsPreview}</p>
+            </div>
+          </div>
+        );
+      }
+      case 'conditional': {
+        const config = field.validation_rules?.conditional_config || {};
+        const preview = getConditionalLabels(config);
+        const updateConditionalConfig = (updates: Record<string, any>) => updateField(field.id!, {
+          validation_rules: {
+            ...(field.validation_rules || {}),
+            conditional_config: { ...config, ...updates },
+          },
+        });
+
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Trigger Field Key</label>
+              <input value={config.trigger_field_key || ""} onChange={(e) => updateConditionalConfig({ trigger_field_key: e.target.value })} placeholder="field_key" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold" />
+            </div>
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Operator</label>
+              <select value={config.operator || "equals"} onChange={(e) => updateConditionalConfig({ operator: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold">
+                <option value="equals">Equals</option>
+                <option value="not_equals">Not equals</option>
+                <option value="contains">Contains</option>
+                <option value="greater_than">Greater than</option>
+                <option value="less_than">Less than</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Trigger Value</label>
+              <input value={config.trigger_value || ""} onChange={(e) => updateConditionalConfig({ trigger_value: e.target.value })} placeholder="yes, true, 18..." className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold" />
+            </div>
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Inner Type</label>
+              <select value={config.inner_type || "text"} onChange={(e) => updateConditionalConfig({ inner_type: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold">
+                {['text','textarea','number','email','select','radio','checkbox','date','file'].map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+            <div className="rounded-xl bg-blue-50/60 border border-blue-100 px-4 py-3">
+              <p className="text-[10px] font-black text-[#1148ad] uppercase tracking-widest mb-1">{preview.conditionLabel}</p>
+              <p className="text-xs font-bold text-slate-600">{preview.actionLabel}</p>
+            </div>
+          </div>
+        );
+      }
       case 'select':
       case 'radio':
       case 'checkbox':
@@ -265,4 +405,3 @@ const PropertiesPanel: React.FC = () => {
 };
 
 export default PropertiesPanel;
-

@@ -218,4 +218,3 @@ const StepManager: React.FC = () => {
 };
 
 export default StepManager;
-
